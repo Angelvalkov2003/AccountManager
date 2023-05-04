@@ -39,9 +39,6 @@ button_style = {'font': ('Arial', 14), 'fg': 'white', 'bg': 'blue', 'width': 10,
 
 email_sender = EmailSender('angelvalkovback@gmail.com', 'kbieocfvcojxnhju')
 
-import random
-import string
-from captcha.image import ImageCaptcha
 
 def register_window():
     

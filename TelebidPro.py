@@ -5,6 +5,9 @@ import re
 import random
 import string
 from email_sender import EmailSender
+from captcha.image import ImageCaptcha
+from PIL import ImageTk, Image
+from io import BytesIO
 
 
 connection = sqlite3.connect("userdata.db")
@@ -35,6 +38,10 @@ login_window = None
 button_style = {'font': ('Arial', 14), 'fg': 'white', 'bg': 'blue', 'width': 10, 'height': 1, 'bd': 0}
 
 email_sender = EmailSender('angelvalkovback@gmail.com', 'kbieocfvcojxnhju')
+
+import random
+import string
+from captcha.image import ImageCaptcha
 
 def register_window():
     
@@ -86,6 +93,14 @@ def register_user():
     username = username_register.get()
     password = password_register.get()
     email = email_register.get()
+    
+    cur.execute("SELECT id FROM userdata WHERE username=?", (username,))
+    existing_user = cur.fetchone()
+
+    if existing_user:
+        status_label_register.config(text="Username already taken")
+        return
+    
     if validate_account(username, password, email, status_label_register):
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
         cur.execute("INSERT INTO userdata (username, password, email) VALUES (?, ?, ?)", (username, hashed_password, email))
@@ -94,7 +109,6 @@ def register_user():
         subject = 'Account Created'
         body = f'Hi, {username}. You created an account in our software!'
         email_sender.send_email(email, subject, body)
-
 
 
 def login_window():
@@ -237,6 +251,11 @@ def update_window():
 def update_user(user_id, new_username, new_password, new_email):
     global username_login, status_label_update
     if validate_account(new_username, new_password, new_email, status_label_update):
+        cur.execute("SELECT id FROM userdata WHERE username=?", (new_username,))
+        row = cur.fetchone()
+        if row and row[0] != user_id:
+            status_label_update.config(text="Username already taken")
+            return
         if new_username:
             cur.execute("UPDATE userdata SET username=? WHERE id=?", (new_username, user_id))
             username_login.delete(0, 'end')

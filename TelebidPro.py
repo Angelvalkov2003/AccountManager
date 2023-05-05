@@ -5,9 +5,7 @@ import re
 import random
 import string
 from email_sender import EmailSender
-from captcha.image import ImageCaptcha
-from PIL import ImageTk, Image
-from io import BytesIO
+from captcha_file import Captcha
 
 
 connection = sqlite3.connect("userdata.db")
@@ -34,15 +32,18 @@ username_login = None
 password_login = None
 status_label_login = None
 login_window = None
+registerWindow = None
+captcha = None
 
 button_style = {'font': ('Arial', 14), 'fg': 'white', 'bg': 'blue', 'width': 10, 'height': 1, 'bd': 0}
 
 email_sender = EmailSender('angelvalkovback@gmail.com', 'kbieocfvcojxnhju')
 
 
+
 def register_window():
     
-    global username_register, password_register, email_register, status_label_register
+    global username_register, password_register, email_register, status_label_register, registerWindow
     registerWindow = tk.Toplevel(root)
     registerWindow.title("Register")
     registerWindow.geometry("500x300")
@@ -65,10 +66,13 @@ def register_window():
     email_register.place(x=200, y=150, width=200)
 
     register_button = tk.Button(registerWindow, text="Register", font=("Helvetica", 12), bg="#4CAF50", fg="white", command=register_user)
-    register_button.place(x=200, y=220)
+    register_button.place(x=200, y=250)
+    
+    captcha_button = tk.Button(registerWindow, text="Captcha", font=("Helvetica", 12), bg="#4CAF50", fg="white", command=captcha_user)
+    captcha_button.place(x=200, y=220)
 
     status_label_register = tk.Label(registerWindow, text="", font=("Helvetica", 12), bg="#f5f5f5")
-    status_label_register.place(x=200, y=250)
+    status_label_register.place(x=200, y=280)
 
     
 def validate_account(username, password, email, label):
@@ -85,28 +89,35 @@ def validate_account(username, password, email, label):
                 label.config(text="Password must contain a letter and a digit and be more that 8 symbols")
         else:
             label.config(text="The username must be more that 6 symbols")
+            
+def captcha_user():
+    global captcha
+    captcha = Captcha(registerWindow)
+    
 def register_user():
     global username_register, password_register, email_register
+    
     username = username_register.get()
     password = password_register.get()
     email = email_register.get()
     
     cur.execute("SELECT id FROM userdata WHERE username=?", (username,))
     existing_user = cur.fetchone()
-
-    if existing_user:
-        status_label_register.config(text="Username already taken")
-        return
-    
-    if validate_account(username, password, email, status_label_register):
-        hashed_password = hashlib.sha256(password.encode()).hexdigest()
-        cur.execute("INSERT INTO userdata (username, password, email) VALUES (?, ?, ?)", (username, hashed_password, email))
-        connection.commit()
-        status_label_register.config(text="User registered successfully")
-        subject = 'Account Created'
-        body = f'Hi, {username}. You created an account in our software!'
-        email_sender.send_email(email, subject, body)
-
+    if captcha.answer():
+        if existing_user:
+            status_label_register.config(text="Username already taken")
+            return
+        
+        if validate_account(username, password, email, status_label_register):
+            hashed_password = hashlib.sha256(password.encode()).hexdigest()
+            cur.execute("INSERT INTO userdata (username, password, email) VALUES (?, ?, ?)", (username, hashed_password, email))
+            connection.commit()
+            status_label_register.config(text="User registered successfully")
+            subject = 'Account Created'
+            body = f'Hi, {username}. You created an account in our software!'
+            email_sender.send_email(email, subject, body)
+    else:
+        status_label_register.config(text="Do your captcha")
 
 def login_window():
     

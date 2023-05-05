@@ -14,7 +14,7 @@ class Captcha:
         self.label.pack()
 
         self.captcha = self.generate_captcha()
-        self.captcha_label = tk.Label(self.master, text=self.captcha)
+        self.captcha_label = tk.Label(self.master, text=self.captcha, font=('Courier New', 12, 'underline'), fg='orange', bg='black')
         self.captcha_label.pack()
 
         self.entry = tk.Entry(self.master)
@@ -39,6 +39,7 @@ class Captcha:
             self.entry.delete(0, tk.END)
     def answer(self):
         return self.value
+
 
 
 

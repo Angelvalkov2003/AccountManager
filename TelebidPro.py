@@ -27,6 +27,7 @@ root.configure(bg="#ffffff")
 username_register = None
 password_register = None
 email_register = None
+verification_register=None
 status_label_register = None
 username_login = None
 password_login = None
@@ -34,6 +35,7 @@ status_label_login = None
 login_window = None
 registerWindow = None
 captcha = None
+verification_code = None
 
 button_style = {'font': ('Arial', 14), 'fg': 'white', 'bg': 'blue', 'width': 10, 'height': 1, 'bd': 0}
 
@@ -43,10 +45,10 @@ email_sender = EmailSender('angelvalkovback@gmail.com', 'kbieocfvcojxnhju')
 
 def register_window():
     
-    global username_register, password_register, email_register, status_label_register, registerWindow
+    global username_register, password_register, email_register, verification_register, status_label_register, registerWindow
     registerWindow = tk.Toplevel(root)
     registerWindow.title("Register")
-    registerWindow.geometry("500x300")
+    registerWindow.geometry("500x400")
     registerWindow.resizable(False, False)
     registerWindow.configure(bg="#ffffff")
 
@@ -65,14 +67,24 @@ def register_window():
     email_register = tk.Entry(registerWindow, font=("Helvetica", 12))
     email_register.place(x=200, y=150, width=200)
 
-    register_button = tk.Button(registerWindow, text="Register", font=("Helvetica", 12), bg="#4CAF50", fg="white", command=register_user)
-    register_button.place(x=200, y=250)
+    verification_label = tk.Label(registerWindow, text="Verification code:", font=("Helvetica", 12), bg="#f5f5f5")
+    verification_label.place(x=50, y=200)
+    verification_register = tk.Entry(registerWindow, font=("Helvetica", 12))
+    verification_register.place(x=200, y=200, width=200)
+
     
     captcha_button = tk.Button(registerWindow, text="Captcha", font=("Helvetica", 12), bg="#4CAF50", fg="white", command=captcha_user)
-    captcha_button.place(x=200, y=220)
+    captcha_button.place(x=150, y=260)
+    
+    email_button = tk.Button(registerWindow, text="Send verification code", font=("Helvetica", 12), bg="#4CAF50", fg="white", command=verification_user)
+    email_button.place(x=250, y=260)
+    
+    register_button = tk.Button(registerWindow, text="Register", font=("Helvetica", 12), bg="#4CAF50", fg="white", command=register_user)
+    register_button.place(x=200, y=320)
+    
 
     status_label_register = tk.Label(registerWindow, text="", font=("Helvetica", 12), bg="#f5f5f5")
-    status_label_register.place(x=200, y=280)
+    status_label_register.place(x=200, y=360)
 
     
 def validate_account(username, password, email, label):
@@ -94,30 +106,43 @@ def captcha_user():
     global captcha
     captcha = Captcha(registerWindow)
     
+def verification_user():
+    global verification_code
+    email = email_register.get()
+    verification_code = generate_password()
+    subject = "Verification code"
+    body = f'Hi. your verification code is: {verification_code}'
+    email_sender.send_email(email, subject, body)
+    
 def register_user():
     global username_register, password_register, email_register
     
     username = username_register.get()
     password = password_register.get()
     email = email_register.get()
+    verification_used = verification_register.get()
+    
     
     cur.execute("SELECT id FROM userdata WHERE username=?", (username,))
     existing_user = cur.fetchone()
     if captcha.answer():
-        if existing_user:
-            status_label_register.config(text="Username already taken")
-            return
-        
-        if validate_account(username, password, email, status_label_register):
-            hashed_password = hashlib.sha256(password.encode()).hexdigest()
-            cur.execute("INSERT INTO userdata (username, password, email) VALUES (?, ?, ?)", (username, hashed_password, email))
-            connection.commit()
-            status_label_register.config(text="User registered successfully")
-            subject = 'Account Created'
-            body = f'Hi, {username}. You created an account in our software!'
-            email_sender.send_email(email, subject, body)
+        if verification_code == verification_used:
+            if existing_user:
+                status_label_register.config(text="Username already taken")
+                return
+            
+            if validate_account(username, password, email, status_label_register):
+                hashed_password = hashlib.sha256(password.encode()).hexdigest()
+                cur.execute("INSERT INTO userdata (username, password, email) VALUES (?, ?, ?)", (username, hashed_password, email))
+                connection.commit()
+                status_label_register.config(text="User registered successfully")
+                subject = 'Account Created'
+                body = f'Hi, {username}. You created an account in our software!'
+                email_sender.send_email(email, subject, body)
+        else:
+            status_label_register.config(text="This is not the verification code")
     else:
-        status_label_register.config(text="Do your captcha")
+        status_label_register.config(text="Do the captcha")
 
 def login_window():
     

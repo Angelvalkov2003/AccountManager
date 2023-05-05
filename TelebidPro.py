@@ -19,6 +19,7 @@ cur.execute("""
                 email VARCHAR(255) NOT NULL
             )
             """)
+
 root = tk.Tk()
 root.title("Menu")
 root.attributes('-fullscreen', True)
@@ -38,60 +39,59 @@ captcha = None
 verification_code = None
 
 button_style = {'font': ('Arial', 14), 'fg': 'white', 'bg': 'blue', 'width': 10, 'height': 1, 'bd': 0}
+button_style_orange = {'font': ('Arial', 14), 'fg': 'white', 'bg': 'orange', 'width': 20, 'height': 1, 'bd': 0}
+label_style = {'font': ('Arial', 14), 'fg': 'black', 'bg': 'white'}
 
 email_sender = EmailSender('angelvalkovback@gmail.com', 'kbieocfvcojxnhju')
-
 
 
 def register_window():
     
     global username_register, password_register, email_register, verification_register, status_label_register, registerWindow
+    
     registerWindow = tk.Toplevel(root)
     registerWindow.title("Register")
     registerWindow.geometry("500x400")
     registerWindow.resizable(False, False)
     registerWindow.configure(bg="#ffffff")
 
-    username_label = tk.Label(registerWindow, text="Username:", font=("Helvetica", 12), bg="#f5f5f5")
+    username_label = tk.Label(registerWindow, text="Username:", **label_style)
     username_label.place(x=50, y=50)
-    username_register = tk.Entry(registerWindow, font=("Helvetica", 12))
+    username_register = tk.Entry(registerWindow, **label_style)
     username_register.place(x=200, y=50, width=200)
 
-    password_label = tk.Label(registerWindow, text="Password:", font=("Helvetica", 12), bg="#f5f5f5")
+    password_label = tk.Label(registerWindow, text="Password:", **label_style)
     password_label.place(x=50, y=100)
-    password_register = tk.Entry(registerWindow, show="*", font=("Helvetica", 12))
+    password_register = tk.Entry(registerWindow, show="*", **label_style)
     password_register.place(x=200, y=100, width=200)
 
-    email_label = tk.Label(registerWindow, text="Email:", font=("Helvetica", 12), bg="#f5f5f5")
+    email_label = tk.Label(registerWindow, text="Email:", **label_style)
     email_label.place(x=50, y=150)
-    email_register = tk.Entry(registerWindow, font=("Helvetica", 12))
+    email_register = tk.Entry(registerWindow, **label_style)
     email_register.place(x=200, y=150, width=200)
 
-    verification_label = tk.Label(registerWindow, text="Verification code:", font=("Helvetica", 12), bg="#f5f5f5")
+    verification_label = tk.Label(registerWindow, text="Verification code:", **label_style)
     verification_label.place(x=50, y=200)
-    verification_register = tk.Entry(registerWindow, font=("Helvetica", 12))
+    verification_register = tk.Entry(registerWindow, **label_style)
     verification_register.place(x=200, y=200, width=200)
-
     
-    captcha_button = tk.Button(registerWindow, text="Captcha", font=("Helvetica", 12), bg="#4CAF50", fg="white", command=captcha_user)
-    captcha_button.place(x=150, y=260)
+    captcha_button = tk.Button(registerWindow, text="Captcha", **button_style, command=captcha_user)
+    captcha_button.place(x=120, y=260)
     
-    email_button = tk.Button(registerWindow, text="Send verification code", font=("Helvetica", 12), bg="#4CAF50", fg="white", command=verification_user)
+    email_button = tk.Button(registerWindow, text="Verification", **button_style, command=verification_user)
     email_button.place(x=250, y=260)
     
-    register_button = tk.Button(registerWindow, text="Register", font=("Helvetica", 12), bg="#4CAF50", fg="white", command=register_user)
-    register_button.place(x=200, y=320)
-    
+    register_button = tk.Button(registerWindow, text="Register", **button_style, command=register_user)
+    register_button.place(x=180, y=320)
 
-    status_label_register = tk.Label(registerWindow, text="", font=("Helvetica", 12), bg="#f5f5f5")
-    status_label_register.place(x=200, y=360)
+    status_label_register = tk.Label(registerWindow, text="", **label_style)
+    status_label_register.place(x=180, y=360)
 
     
 def validate_account(username, password, email, label):
         if len(username)>6:
             if re.search(r'\d', password) and re.search(r'[a-zA-Z]', password) and len(password)>8:
                 if len(email)>8 and email.count("@")>0:
-                    
                     
                     return True
                     
@@ -102,17 +102,20 @@ def validate_account(username, password, email, label):
         else:
             label.config(text="The username must be more that 6 symbols")
             
+            
 def captcha_user():
     global captcha
     captcha = Captcha(registerWindow)
     
+    
 def verification_user():
     global verification_code
     email = email_register.get()
-    verification_code = generate_password()
+    verification_code = generate_random_text()
     subject = "Verification code"
     body = f'Hi. your verification code is: {verification_code}'
     email_sender.send_email(email, subject, body)
+    
     
 def register_user():
     global username_register, password_register, email_register
@@ -121,7 +124,6 @@ def register_user():
     password = password_register.get()
     email = email_register.get()
     verification_used = verification_register.get()
-    
     
     cur.execute("SELECT id FROM userdata WHERE username=?", (username,))
     existing_user = cur.fetchone()
@@ -144,57 +146,53 @@ def register_user():
     else:
         status_label_register.config(text="Do the captcha")
 
+
 def login_window():
-    
     global username_login, password_login, status_label_login
+    
     loginWindow = tk.Toplevel(root)
     loginWindow.title("Login")
     loginWindow.geometry("500x300")
     loginWindow.resizable(False, False)
     loginWindow.configure(bg="#ffffff")
     loginWindow.bind('<Escape>', lambda e: loginWindow.destroy())
-
-   
-    frame = tk.Frame(loginWindow)
-
     
-    username_label = tk.Label(frame, text="Username:", font=("Arial", 14))
+    username_label = tk.Label(loginWindow, text="Username:", **label_style)
     username_label.grid(row=0, column=0, padx=20, pady=10)
-    username_login = tk.Entry(frame, font=("Arial", 14))
+    username_login = tk.Entry(loginWindow, **label_style)
     username_login.grid(row=0, column=1, padx=20, pady=10)
-
-    
-    password_label = tk.Label(frame, text="Password:", font=("Arial", 14))
+ 
+    password_label = tk.Label(loginWindow, text="Password:", **label_style)
     password_label.grid(row=1, column=0, padx=20, pady=10)
-    password_login = tk.Entry(frame, show="*", font=("Arial", 14))
+    password_login = tk.Entry(loginWindow, show="*", **label_style)
     password_login.grid(row=1, column=1, padx=20, pady=10)
-
     
-    login_button = tk.Button(frame, text="Login", command=login_user, font=("Arial", 14), bg="blue", fg="white", width=10)
+    login_button = tk.Button(loginWindow, text="Login", command=login_user, **button_style)
     login_button.grid(row=2, column=0, padx=20, pady=10)
-
     
-    forgot_password_button = tk.Button(frame, text="Forgotten password", command=forgot_password, font=("Arial", 14), bg="orange", fg="white", width=20)
+    forgot_password_button = tk.Button(loginWindow, text="Forgotten password", command=forgot_password, **button_style_orange)
     forgot_password_button.grid(row=2, column=1, padx=20, pady=10)
-
     
-    status_label_login = tk.Label(frame, text="", font=("Arial", 14))
+    status_label_login = tk.Label(loginWindow, text="", **label_style)
     status_label_login.grid(row=3, column=0, columnspan=2, padx=20, pady=10)
 
-    frame.pack()
 
-def generate_password():
+def generate_random_text():
     characters = string.ascii_letters + string.digits
     password = ''.join(random.choices(characters, k=8))
     return password
     
+    
 def forgot_password():
     global username_login
+    
     usernameLogin = username_login.get()
-    new_password = generate_password()
+    new_password = generate_random_text()
     hashed_new_password = hashlib.sha256(new_password.encode()).hexdigest()
+    
     cur.execute("SELECT * FROM userdata WHERE username=?", (usernameLogin,))
     user = cur.fetchone()
+    
     if user:
         user_id = user[0]
         cur.execute("UPDATE userdata SET password=? WHERE id=?", (hashed_new_password, user_id))
@@ -206,8 +204,10 @@ def forgot_password():
     else:
         status_label_login.config(text="Can't create your new password")
     
+    
 def login_user():
     global username_login, password_login
+    
     usernameLogin = username_login.get()
     passwordLogin = password_login.get()
     hashed_passwordLogin = hashlib.sha256(passwordLogin.encode()).hexdigest()
@@ -227,17 +227,19 @@ def login_user():
         status_label_account = tk.Label(accountWindow, text='Hi, '+str(usernameLogin), font=("Arial", 30), bg="white")
         status_label_account.pack(pady=20)
 
-        update_button = tk.Button(accountWindow, text="Update Account", command=update_window, font=("Arial", 14), bg="orange", fg="white", width=20, height=2)
+        update_button = tk.Button(accountWindow, text="Update Account", command=update_window, **button_style_orange)
         update_button.pack(pady=10)
 
-        delete_button = tk.Button(accountWindow, text="Delete Account", command=delete_account, font=("Arial", 14), bg="orange", fg="white", width=20, height=2)
+        delete_button = tk.Button(accountWindow, text="Delete Account", command=delete_account, **button_style_orange)
         delete_button.pack(pady=10)
         
     else:
         status_label_login.config(text="Invalid username or password")
 
+
 def update_window():
     global username_login, password_login, status_label_update
+    
     username = username_login.get()
     
     cur.execute("SELECT * FROM userdata WHERE username=?", (username,))
@@ -252,37 +254,39 @@ def update_window():
         updateWindow.bind('<Escape>', lambda e: updateWindow.destroy())
 
         username_label = tk.Label(updateWindow, text="Current Username: " + user[1], bg="#ffffff")
-        username_label.place(x=50, y=50)
+        username_label.place(x=50, y=20)
         username_new_label = tk.Label(updateWindow, text="New Username:", bg="#ffffff")
-        username_new_label.place(x=50, y=80)
+        username_new_label.place(x=50, y=50)
         username_new_entry = tk.Entry(updateWindow)
-        username_new_entry.place(x=200, y=80, width=200)
+        username_new_entry.place(x=200, y=50, width=200)
 
         password_label = tk.Label(updateWindow, text="Current Password: " + "*" * 8, bg="#ffffff")
-        password_label.place(x=50, y=120)
+        password_label.place(x=50, y=90)
         password_new_label = tk.Label(updateWindow, text="New Password:", bg="#ffffff")
-        password_new_label.place(x=50, y=150)
+        password_new_label.place(x=50, y=120)
         password_new_entry = tk.Entry(updateWindow, show="*", bg="#ffffff")
-        password_new_entry.place(x=200, y=150, width=200)
+        password_new_entry.place(x=200, y=120, width=200)
 
         email_label = tk.Label(updateWindow, text="Current Email: " + user[3], bg="#ffffff")
-        email_label.place(x=50, y=190)
+        email_label.place(x=50, y=160)
         email_new_label = tk.Label(updateWindow, text="New Email:", bg="#ffffff")
-        email_new_label.place(x=50, y=220)
+        email_new_label.place(x=50, y=190)
         email_new_entry = tk.Entry(updateWindow)
-        email_new_entry.place(x=200, y=220, width=200)
+        email_new_entry.place(x=200, y=190, width=200)
 
         update_button = tk.Button(updateWindow, text="Update", command=lambda: update_user(user[0], username_new_entry.get(), password_new_entry.get(), email_new_entry.get()), bg="green")
-        update_button.place(x=200, y=270, width=100, height=40)
+        update_button.place(x=200, y=250, width=100, height=40)
 
         status_label_update = tk.Label(updateWindow, text="", bg="#ffffff")
-        status_label_update.place(x=200, y=250)
+        status_label_update.place(x=190, y=220)
 
     else:
         status_label_update.config(text="Invalid account to update")
 
+
 def update_user(user_id, new_username, new_password, new_email):
     global username_login, status_label_update
+    
     if validate_account(new_username, new_password, new_email, status_label_update):
         cur.execute("SELECT id FROM userdata WHERE username=?", (new_username,))
         row = cur.fetchone()
@@ -302,8 +306,10 @@ def update_user(user_id, new_username, new_password, new_email):
         connection.commit()
         status_label_update.config(text="User updated successfully")
 
+
 def delete_account():
     global username_login, password_login
+    
     username = username_login.get()
     password = password_login.get()
     hashed_password = hashlib.sha256(password.encode()).hexdigest()
@@ -321,15 +327,13 @@ def delete_account():
         status_label_account.config(text="Invalid username or password")
         
 
-
-
 login_button_menu = tk.Button(root, text="Login", command=login_window, **button_style)
-login_button_menu.pack(pady=10)
+login_button_menu.place(x=700, y=250)
 
 register_button_menu = tk.Button(root, text="Register", command=register_window, **button_style)
-register_button_menu.pack(pady=10)
+register_button_menu.place(x=700, y=350)
 
 exit_button = tk.Button(root, text="Exit", command=root.destroy, **button_style)
-exit_button.pack(pady=10)
+exit_button.place(x=700, y=450)
 
 root.mainloop()
